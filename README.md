@@ -3,7 +3,7 @@
 The scripts in this repository can be used to implement the methods described in Larson et al. 2015 for detecting SMA carriers. This technique utilizes both carrier probabilities and coverage at SMN1 loci to investigate SMA carrier status. (in beta)
 
 
-####run_smn_doc.sh
+#### run_smn_doc.sh
 Calculate coverge per gene and at three SMN loci that distinguish SMN1 from SMN2
 Input Files:
 1) bam_list # file with one line per sample (tab delimited: absolute bam path and whether ice/agilent was used)
@@ -14,25 +14,25 @@ Input Files:
 6) picard #location of picard jar installation
 7) scripts_dir #location of sma scripts
 
-####merge_smn_doc.py
+#### merge_smn_doc.py
 Merge SMN coverage results from all samples into one file
 Input Files:
 1) bam_list # file with one line per  sample (tab delimited: absolute bam path and whether ice/agilent was used)
 2) output_dir #name of output directory (keep consistent with previous scripts)
 
 
-####calculate_coef_var.py
+#### calculate_coef_var.py
 Calculate theta, di, ri, pi
 Input Files:
 1) cov_directory  #name of output directory (keep consistent with previous scripts)
 2) bam_files # file with one line per  sample (tab delimited: absolute bam path and whether ice/agilent was used)
 3) interval_of_interest #specify if should run on ice or agilent
 
-####calculate_carrier_probability.R
+#### calculate_carrier_probability.R
 Calculates the carrier probabilitiy and plots credible intervals
 
 
-####Requirements:
+#### Requirements:
 GATK
 Picard
 datamash
