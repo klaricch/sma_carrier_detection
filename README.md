@@ -27,7 +27,7 @@ Calculate theta, di, ri, pi
 1) cov_directory  #name of output directory (keep consistent with previous scripts)
 2) bam_files # file with one line per  sample (tab delimited: absolute bam path and whether ice/agilent was used)
 3) interval_of_interest #specify if should run on ice or agilent
-
+4) datamash #path to datamash
 #### calculate_carrier_probability.R
 Calculates the carrier probabilitiy and plots credible intervals
 

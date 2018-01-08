@@ -1,17 +1,25 @@
 #!/usr/bin/env python
-# this script merges the SMN coverage reuslts at 6 postiions into one file with all samples
+# this script merges the SMN coverage results at 6 positions into one file with all samples
 
 import re
 import os
 import sys
+import argparse
 from os.path import isfile
 
 
 OUT=open("smn_doc_all.txt", 'w')
 OUT.write("sample\ttarget\tgene\tcoverage\n")
 
-bam=sys.argv[1]
-output_dir=sys.argv[2]
+
+p = argparse.ArgumentParser()
+p.add_argument("-b", "--bams", required=True, help="file with one line per sample (tab delimited: absolute bam path and whether ice/agilent was used)")
+p.add_argument("-o", "--output", required=True, help="path to output directory")
+
+args = p.parse_args()
+bam=args.bams
+output_dir=args.output
+
 
 with open(bam, 'r') as IN:
 	for line in IN:

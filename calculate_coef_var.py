@@ -1,10 +1,12 @@
 #!/usr/bin/env python
-#this script calculate theta, di, ri, pi
+#this script calculates theta, di, ri, pi
 
 import os
 import re
 import sys
 import statistics
+import argparse
+import logging
 from collections import defaultdict
 from subprocess import Popen, PIPE
 from operator import itemgetter
@@ -12,23 +14,34 @@ import numpy as np
 import datetime
 import pickle
 
-cov_directory=sys.argv[1]
-bam_files=sys.argv[2]
-interval_of_interest=sys.argv[3]
+logging.basicConfig(level=logging.INFO, format='%(asctime)s: %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+
+p = argparse.ArgumentParser()
+p.add_argument("-o", "--output", required=True, help="path to output directory")
+p.add_argument("-b", "--bams", required=True, help="file with one line per sample (tab delimited: absolute bam path and whether ice/agilent was used)")
+p.add_argument("-i", "--intervals", required=True, help="specify if should run on ice or agilent")
+p.add_argument("-d", "--datamash", required=True, help="path to datamash")
+
+args = p.parse_args()
+cov_directory=args.output
+bam_files=args.bams
+interval_of_interest=args.intervals
+datamash=args.datamash
+
+
 smn_coverages="{cov_directory}/smn_doc_all.txt".format(**locals())
 
 smn1_cov={}
 smn2_cov={}
 
 
-print "start:" + str(datetime.datetime.now())
-
-
+logging.info("Reading in coverage data...")
 ############################################
 #       READ IN FILES
 ############################################
 
 result, err = Popen(["""cat {smn_coverages} |{datamash} --sort --headers --group 1,3 mean 4 > smn12_doc_all.txt""".format(**locals())], stdout=PIPE, stderr=PIPE, shell=True).communicate()
+
 
 #get list of samples of interest
 samples_of_interest={}
@@ -41,7 +54,7 @@ with open(bam_files, 'r') as IN:
 			sample = re.sub(".bam$","",os.path.basename(bam))
 			samples_of_interest[sample]=0
 
-# read in the SMN1 and SMN2 mean/meidan gene coverage per sample
+# read in the SMN1 and SMN2 mean/median gene coverage per sample
 sample_list={}
 with open("{cov_directory}/smn12_doc_all.txt".format(**locals()), 'r') as IN:
 	next(IN)
@@ -65,15 +78,13 @@ with open("{cov_directory}/smn_doc_all.txt".format(**locals()), 'r') as IN:
 		target_coverages[sample][info]=coverage
 
 
-print "step0.25:" + str(datetime.datetime.now())
 
-## NEED TO ADD IN SUPPORT FOR RUNNING FAILS
+
+## NEED TO ADD IN SUPPORT FOR FAILED SAMPLES
 pre_files=[os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(cov_directory)) for f in fn]
 files=[f for f in pre_files if os.path.isfile(f)  and os.path.basename(f).startswith("gene_cov") and f.split('/')[-2] in samples_of_interest]
 
-
-print "step0.5:" + str(datetime.datetime.now())
-
+logging.info("Calculating median coverage across all intervals...")
 #get median coverage across all intervals per gene per sample
 for file in files:
 	filename=os.path.splitext(os.path.basename(file))[0]
@@ -82,13 +93,15 @@ for file in files:
 	result, err = Popen([cmd], stdout=PIPE, stderr=PIPE, shell=True).communicate()
 
 
-print "step1:" + str(datetime.datetime.now())
+
 
 #files of median(normalized_coverage)
 #pre_files=[os.path.join(dp, f) for dp, dn, fn in os.walk(os.path.expanduser(cov_directory)) for f in fn]
 medians=[f for f in pre_files if os.path.isfile(f)  and os.path.basename(f).startswith("median_gene_cov") and os.stat(f).st_size != 0 and f.split('/')[-2] in samples_of_interest]
 
 sample_list=[]
+
+
 #get list of samples...remove this redundancy later with below chunk
 for file in medians:
 	match=re.search("median_gene_cov_([A-za-z\d\.]+).txt", file)
@@ -99,6 +112,7 @@ for file in medians:
 ############################################
 #       CHECK FOR VARIABILITY AT SMN SITES
 ############################################
+logging.info("Checking variability in coverage at SMN sites...")
 diff1_count=0
 diff2_count=0
 smn1_counts={}
@@ -165,6 +179,7 @@ sample_zkis=defaultdict(dict)
 #       GET MEDIAN COVERAGE AND ZKI
 ############################################
 
+logging.info("Calculating zki...")
 #put medians for each gene into a list
 for file in medians:
 	match=re.search("median_gene_cov_([A-za-z\d\.]+).txt", file)
@@ -189,9 +204,7 @@ for file in medians:
 					zkis[gene].append(zki)
 					sample_zkis[sample][gene]=zki
 
-print "step2:" + str(datetime.datetime.now())
-
-
+logging.info("Calculating MAD...")
 def mad_sd(values_list):
 	values_median=statistics.median(values_list)
 	residuals=[abs(i-values_median) for i in values_list]
@@ -207,13 +220,13 @@ all_samples_MAD_zki={k:mad_sd(v) for k,v in zkis.iteritems()}
 
 
 #PICKLE DUMP
-with open("all_samples_median.txt", "wb") as fp: # Pickle
+with open("all_samples_median.txt", "wb") as fp: # Pickle for dev, remove later
 		pickle.dump(all_samples_median, fp) 
-with open("all_samples_MAD.txt", "wb") as fp: # Pickle
+with open("all_samples_MAD.txt", "wb") as fp: 
 		pickle.dump(all_samples_MAD, fp) 
-with open("all_samples_median_zki.txt", "wb") as fp: # Pickle
+with open("all_samples_median_zki.txt", "wb") as fp: 
 		pickle.dump(all_samples_median_zki, fp)
-with open("all_samples_MAD_zki.txt", "wb") as fp: # Pickle
+with open("all_samples_MAD_zki.txt", "wb") as fp: 
 		pickle.dump(all_samples_MAD_zki, fp)
 
 
@@ -228,20 +241,18 @@ with open("all_samples_MAD_zki.txt", "rb") as fp:
 		all_samples_MAD_zki= pickle.load(fp)
 
 
-
-print "step3:" + str(datetime.datetime.now())
-
+logging.info("Calculating coefficient of variation...")
 #for each gene, calculate SD/mean and MAD/median
 coef_median={k: float(all_samples_MAD[k])/float(all_samples_median[k]) if all_samples_median[k]!=0 else 0 for k in all_samples_MAD}
 coef_median_zki={k: float(all_samples_MAD_zki[k])/float(all_samples_median_zki[k]) if all_samples_median_zki[k]!=0 else 0 for k in all_samples_MAD_zki}
 
 
-print "step4:" + str(datetime.datetime.now())
-print "step5:" + str(datetime.datetime.now())
+
 
 ############################################
 #       DECISION ON HOUSEKEEPING GENES
 ############################################
+logging.info("Choosing housekeeping genes...")
 #get 95th percentile value among gene medians
 all_genes=[v for k,v in all_samples_median.iteritems()]
 all_genes_95=np.percentile(all_genes,95)
@@ -261,7 +272,6 @@ for gene,num in median_samples_in_bottom.items():
 		del final_median_list_zki[gene]
 
 
-print "step6:" + str(datetime.datetime.now())
 #print list sorted by coef of variation
 sorted_final_median_list=sorted(final_median_list.iteritems(), key=itemgetter(1), reverse=True)
 sorted_final_median_list_zki=sorted(final_median_list_zki.iteritems(), key=itemgetter(1), reverse=True)
@@ -296,10 +306,9 @@ pre_mean_zki_hk={k:v for k,v in final_median_list_zki.iteritems() if k in house_
 mean_zki_hk=statistics.mean(pre_mean_zki_hk.values())
 
 
-print "step7:" + str(datetime.datetime.now())
-#calculate pi
-#Dbi= number of SMN1 reads
-#rbi=number of SMN1 and SMN2 reads
+logging.info("Calculating variables...")#calculate pi
+# Dbi= number of SMN1 reads
+# rbi=number of SMN1 and SMN2 reads
 # Di=theta Di
 # pi=Di/ri
 OUT_SAMPLE=open("{interval_of_interest}_sma_sample_stat.txt".format(**locals()), 'w')
@@ -324,5 +333,4 @@ for sample in sample_list:
 	pi=di/ri
 	OUT_SAMPLE.write("{sample}\t{smn1_reads}\t{smn2_reads}\t{theta}\t{di}\t{ri}\t{pi}\n".format(**locals()))
 OUT_SAMPLE.close()
-print "step8:" + str(datetime.datetime.now())
-
+logging.info("DONE")
