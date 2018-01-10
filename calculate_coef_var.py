@@ -104,7 +104,7 @@ sample_list=[]
 
 #get list of samples...remove this redundancy later with below chunk
 for file in medians:
-	match=re.search("median_gene_cov_([A-za-z\d\.]+).txt", file)
+	match=re.search("median_gene_cov_([A-z\d\.-]+).txt", file)
 	sample=match.group(1)
 	sample_list.append(sample)
 
@@ -182,7 +182,7 @@ sample_zkis=defaultdict(dict)
 logging.info("Calculating zki...")
 #put medians for each gene into a list
 for file in medians:
-	match=re.search("median_gene_cov_([A-za-z\d\.]+).txt", file)
+	match=re.search("median_gene_cov_([A-z\d\.-]+).txt", file)
 	sample=match.group(1)
 	with open(file,'r') as IN:
 		next(IN)
