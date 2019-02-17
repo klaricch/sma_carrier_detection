@@ -26,12 +26,12 @@ while read bam interval; do
 	if [[ $interval == "ice" ]];
 		then \
 			echo "ice"; \
-			qsub -q gsa -V -l h_vmem=20g -o ${output_dir}/logs/cov_per_gene_${sample}_o.txt -e ${output_dir}/logs/cov_per_gene_${sample}_e.txt -S $(which python) ${scripts_dir}/cov_per_gene.py -b $bam -r $reference -i $ice_targets -o $output_dir -p $picard; \
+			qsub -q gsa -V -l h_vmem=40g -o ${output_dir}/logs/cov_per_gene_${sample}_o.txt -e ${output_dir}/logs/cov_per_gene_${sample}_e.txt -S $(which python) ${scripts_dir}/cov_per_gene.py -b $bam -r $reference -i $ice_targets -o $output_dir -p $picard; \
 
 		elif [[ $interval == "agilent" ]];
 			then \
 				echo "agilent"; \
-				qsub -q gsa -V -l h_vmem=20g -o ${output_dir}/logs/cov_per_gene_${sample}_o.txt -e ${output_dir}/logs/cov_per_gene_${sample}_e.txt -S $(which python) ${scripts_dir}/cov_per_gene.py -b $bam -r $reference -i $agilent_targets -o $output_dir -p $picard; \
+				qsub -q gsa -V -l h_vmem=40g -o ${output_dir}/logs/cov_per_gene_${sample}_o.txt -e ${output_dir}/logs/cov_per_gene_${sample}_e.txt -S $(which python) ${scripts_dir}/cov_per_gene.py -b $bam -r $reference -i $agilent_targets -o $output_dir -p $picard; \
 		else
 			echo "CUSTOM INTERVAL FILE"
 	fi; \

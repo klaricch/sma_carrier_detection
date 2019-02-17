@@ -11,7 +11,6 @@ sma_intervals=$4
 output_dir=$5
 
 
-
 sample=$(basename $bam .bam)
 mkdir ${output_dir}/${sample}
 

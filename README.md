@@ -17,7 +17,7 @@ Calculate coverge per gene and at three SMN loci that distinguish SMN1 from SMN2
 ### merge_smn_doc.py
 Merge SMN coverage results from all samples into one file
 ##### Input Files:
-1) bam_list # file with one line per  sample (tab delimited: absolute bam path and whether ice/agilent was used)
+1) bam_list # file with one line per sample (tab delimited: absolute bam path and whether ice/agilent was used)
 2) output_dir #name of output directory (keep consistent with previous scripts)
 
 
@@ -30,6 +30,9 @@ Calculate theta, di, ri, pi
 4) datamash #path to datamash
 #### calculate_carrier_probability.R
 Calculates the carrier probabilitiy and plots credible intervals
+##### Input Files:
+1) the ice/agilent_sma_sample_stat.txt file
+2) output directory
 
 
 #### Requirements:

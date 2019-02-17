@@ -2,7 +2,7 @@
 #this script calculates coverage for gencode target intervals
 
 import sys
-import os.path
+import os
 import argparse
 from subprocess import Popen, PIPE
 
@@ -15,16 +15,20 @@ p.add_argument("-o", "--output", required=True, help="path to output directory")
 p.add_argument("-p", "--picard", required=True, help="path to picard installation")
 
 args = p.parse_args()
-bam=args.bams
-reference=args.reference
-target_intervals=args.intervals
-output_dir=args.output
-picard=args.picard
+bam = args.bams
+reference = args.reference
+target_intervals = args.intervals
+output_dir = args.output
+picard = args.picard
 
-sample=os.path.splitext(os.path.basename(bam))[0]
-bait_name=os.path.basename("{target_intervals}".format(**locals()))
+sample = os.path.splitext(os.path.basename(bam))[0]
+bait_name = os.path.basename("{target_intervals}".format(**locals()))
 
-cmd="""java -Xmx10g -jar {picard} CollectHsMetrics \
+
+if not os.path.isdir("{output_dir}/{sample}".format(**locals())):
+	os.mkdir("{output_dir}/{sample}".format(**locals())) 
+
+cmd = """java -Xmx30g -jar {picard} CollectHsMetrics \
 BAIT_INTERVALS={target_intervals} \
 BAIT_SET_NAME={bait_name} \
 TARGET_INTERVALS={target_intervals} \
